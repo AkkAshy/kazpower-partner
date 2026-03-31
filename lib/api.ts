@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://whats.saribek.uz"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.kaz-power.kz"
 
 /** Axios-инстанс для партнёрского API */
 export const api = axios.create({
