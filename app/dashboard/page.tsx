@@ -20,7 +20,22 @@ export default function DashboardPage() {
 
   const { data, isLoading, error } = useQuery<DashboardData>({
     queryKey: ["partner-dashboard"],
-    queryFn: () => api.get("/dashboard/").then((r) => r.data),
+    queryFn: () =>
+      api.get("/dashboard/").then((r) => {
+        const d = r.data
+        // Маппинг ключей API → фронт
+        return {
+          ...d,
+          earnings_today: Number(d.partner?.daily_earnings ?? 0),
+          earnings_month: Number(d.partner?.monthly_earnings ?? 0),
+          earnings_total: Number(d.partner?.total_earnings ?? 0),
+          stations: d.stations?.map((s: Record<string, unknown>) => ({
+            ...s,
+            earnings_today: Number(s.daily_earnings ?? 0),
+            earnings_month: Number(s.monthly_earnings ?? 0),
+          })),
+        }
+      }),
     refetchInterval: 30000,
   })
 
