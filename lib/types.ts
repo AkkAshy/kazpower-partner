@@ -28,14 +28,22 @@ export interface PartnerStation {
   available_slots: number
   earnings_today: number
   earnings_month: number
+  earnings_total: number
+  period_earnings?: number
 }
 
 /** Статистика дашборда */
 export interface DashboardData {
-  partner: Partner
+  partner: Partner & {
+    daily_earnings?: string
+    monthly_earnings?: string
+    total_earnings?: string
+    period_earnings?: string
+  }
   earnings_today: number
   earnings_month: number
   earnings_total: number
+  period_earnings?: number
   stations: PartnerStation[]
 }
 

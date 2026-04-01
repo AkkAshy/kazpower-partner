@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Banknote,
@@ -8,6 +9,7 @@ import {
   Wifi,
   WifiOff,
   Loader2,
+  Filter,
 } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
@@ -15,24 +17,90 @@ import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import type { DashboardData } from "@/lib/types"
 
+/* === Пресеты периодов === */
+type PresetKey = "today" | "week" | "month" | "all" | "custom"
+
+interface Preset {
+  key: PresetKey
+  label: string
+  /** Возвращает [date_from, date_to] в формате YYYY-MM-DD, или null для "всё время" */
+  range: () => [string, string] | null
+}
+
+function fmt(d: Date) {
+  return d.toISOString().slice(0, 10)
+}
+
+const presets: Preset[] = [
+  {
+    key: "today",
+    label: "Сегодня",
+    range: () => {
+      const t = fmt(new Date())
+      return [t, t]
+    },
+  },
+  {
+    key: "week",
+    label: "Неделя",
+    range: () => {
+      const now = new Date()
+      const from = new Date(now)
+      from.setDate(now.getDate() - 6)
+      return [fmt(from), fmt(now)]
+    },
+  },
+  {
+    key: "month",
+    label: "Месяц",
+    range: () => {
+      const now = new Date()
+      const from = new Date(now.getFullYear(), now.getMonth(), 1)
+      return [fmt(from), fmt(now)]
+    },
+  },
+  { key: "all", label: "Всё время", range: () => null },
+  { key: "custom", label: "Период", range: () => null },
+]
+
 export default function DashboardPage() {
   const { partner } = useAuth()
+  const [activePreset, setActivePreset] = useState<PresetKey>("today")
+  const [customFrom, setCustomFrom] = useState("")
+  const [customTo, setCustomTo] = useState("")
+
+  // Вычисляем параметры запроса
+  const queryParams = useMemo(() => {
+    if (activePreset === "all") return {}
+    if (activePreset === "custom") {
+      if (customFrom && customTo) return { date_from: customFrom, date_to: customTo }
+      return {}
+    }
+    const preset = presets.find((p) => p.key === activePreset)
+    const range = preset?.range()
+    if (!range) return {}
+    return { date_from: range[0], date_to: range[1] }
+  }, [activePreset, customFrom, customTo])
+
+  const hasPeriod = !!queryParams.date_from
 
   const { data, isLoading, error } = useQuery<DashboardData>({
-    queryKey: ["partner-dashboard"],
+    queryKey: ["partner-dashboard", queryParams],
     queryFn: () =>
-      api.get("/dashboard/").then((r) => {
+      api.get("/dashboard/", { params: queryParams }).then((r) => {
         const d = r.data
-        // Маппинг ключей API → фронт
         return {
           ...d,
           earnings_today: Number(d.partner?.daily_earnings ?? 0),
           earnings_month: Number(d.partner?.monthly_earnings ?? 0),
           earnings_total: Number(d.partner?.total_earnings ?? 0),
+          period_earnings: Number(d.partner?.period_earnings ?? 0),
           stations: d.stations?.map((s: Record<string, unknown>) => ({
             ...s,
             earnings_today: Number(s.daily_earnings ?? 0),
             earnings_month: Number(s.monthly_earnings ?? 0),
+            earnings_total: Number(s.total_earnings ?? 0),
+            period_earnings: Number(s.period_earnings ?? 0),
           })),
         }
       }),
@@ -55,6 +123,18 @@ export default function DashboardPage() {
     )
   }
 
+  // Основная сумма — если выбран период, показываем period_earnings
+  const mainEarnings =
+    hasPeriod && data?.period_earnings !== undefined
+      ? data.period_earnings
+      : activePreset === "today"
+        ? (data?.earnings_today ?? 0)
+        : activePreset === "month"
+          ? (data?.earnings_month ?? 0)
+          : (data?.earnings_total ?? 0)
+
+  const presetLabel = presets.find((p) => p.key === activePreset)?.label ?? ""
+
   return (
     <div className="space-y-6">
       {/* Заголовок */}
@@ -65,11 +145,51 @@ export default function DashboardPage() {
         <p className="mt-1 text-sm text-gray-500">Обзор доходов и станций</p>
       </div>
 
+      {/* Фильтр периода */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Filter className="h-4 w-4 text-gray-400" />
+          {presets.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => setActivePreset(p.key)}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-sm font-medium transition-all",
+                activePreset === p.key
+                  ? "bg-brand text-white shadow-sm"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Кастомный диапазон */}
+        {activePreset === "custom" && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            />
+            <span className="text-gray-400 text-sm">—</span>
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            />
+          </div>
+        )}
+      </div>
+
       {/* Карточки статистики */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatsCard
-          title="Сегодня"
-          value={formatMoney(data?.earnings_today ?? 0)}
+          title={activePreset === "custom" ? "За период" : presetLabel}
+          value={formatMoney(mainEarnings)}
           icon={Banknote}
           variant="brand"
         />
@@ -79,7 +199,7 @@ export default function DashboardPage() {
           icon={CalendarDays}
         />
         <StatsCard
-          title="Всего"
+          title="За всё время"
           value={formatMoney(data?.earnings_total ?? 0)}
           icon={TrendingUp}
         />
@@ -106,17 +226,20 @@ export default function DashboardPage() {
                   Статус
                 </th>
                 <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-400 text-right">
-                  Сегодня
+                  {hasPeriod ? "За период" : "Сегодня"}
                 </th>
                 <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-400 text-right">
                   За месяц
+                </th>
+                <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-400 text-right">
+                  Всего
                 </th>
               </tr>
             </thead>
             <tbody>
               {data?.stations?.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-gray-400">
+                  <td colSpan={6} className="px-5 py-8 text-center text-gray-400">
                     Нет станций
                   </td>
                 </tr>
@@ -153,10 +276,17 @@ export default function DashboardPage() {
                     </span>
                   </td>
                   <td className="px-5 py-3 text-right font-medium">
-                    {formatMoney(station.earnings_today)}
+                    {formatMoney(
+                      hasPeriod
+                        ? (station.period_earnings ?? 0)
+                        : station.earnings_today
+                    )}
                   </td>
                   <td className="px-5 py-3 text-right font-medium">
                     {formatMoney(station.earnings_month)}
+                  </td>
+                  <td className="px-5 py-3 text-right font-medium">
+                    {formatMoney(station.earnings_total)}
                   </td>
                 </tr>
               ))}
@@ -200,12 +330,24 @@ export default function DashboardPage() {
               </div>
               <div className="flex gap-4 text-xs">
                 <div>
-                  <span className="text-gray-400">Сегодня: </span>
-                  <span className="font-medium">{formatMoney(station.earnings_today)}</span>
+                  <span className="text-gray-400">
+                    {hasPeriod ? "Период: " : "Сегодня: "}
+                  </span>
+                  <span className="font-medium">
+                    {formatMoney(
+                      hasPeriod
+                        ? (station.period_earnings ?? 0)
+                        : station.earnings_today
+                    )}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-400">Месяц: </span>
                   <span className="font-medium">{formatMoney(station.earnings_month)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Всего: </span>
+                  <span className="font-medium">{formatMoney(station.earnings_total)}</span>
                 </div>
               </div>
             </div>
