@@ -47,7 +47,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed && (
           <div className="flex flex-col overflow-hidden">
             <span className="text-[15px] font-bold tracking-tight text-white whitespace-nowrap">
-              KAZ<span className="text-brand">Power</span>
+              KAZ <span className="text-brand">Power</span>
             </span>
             <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-sidebar-foreground/40 whitespace-nowrap">
               Partner Portal

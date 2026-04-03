@@ -9,8 +9,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "KAZPower Partner",
-  description: "Партнёрский кабинет KAZPower",
+  title: "KAZ Power Partner",
+  description: "Партнёрский кабинет KAZ Power",
 }
 
 export default function RootLayout({

@@ -51,7 +51,7 @@ export default function LoginPage() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white">
-              KAZ<span className="text-brand">Power</span>
+              KAZ <span className="text-brand">Power</span>
             </h1>
             <p className="mt-1 text-sm text-gray-400">Партнёрский кабинет</p>
           </div>
@@ -132,7 +132,7 @@ export default function LoginPage() {
 
         {/* Подвал */}
         <p className="mt-6 text-center text-xs text-gray-500">
-          KAZPower Partner Portal v1.0
+          KAZ Power Partner Portal v1.0
         </p>
       </div>
     </div>

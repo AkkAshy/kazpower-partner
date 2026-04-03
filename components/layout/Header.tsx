@@ -27,7 +27,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
             <Zap className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
           </div>
           <span className="text-sm font-bold text-foreground">
-            KAZ<span className="text-brand">Power</span>
+            KAZ <span className="text-brand">Power</span>
           </span>
         </div>
 

@@ -45,7 +45,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
             </div>
             <div className="flex flex-col">
               <span className="text-[15px] font-bold tracking-tight text-white">
-                KAZ<span className="text-brand">Power</span>
+                KAZ <span className="text-brand">Power</span>
               </span>
               <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-sidebar-foreground/40">
                 Partner Portal
