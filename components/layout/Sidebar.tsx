@@ -41,9 +41,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           collapsed ? "justify-center px-0" : "px-5"
         )}
       >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand">
-          <Zap className="h-4.5 w-4.5 text-white" strokeWidth={2.5} />
-        </div>
+        <img src="/logo.jpg" alt="KAZ Power" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
         {!collapsed && (
           <div className="flex flex-col overflow-hidden">
             <span className="text-[15px] font-bold tracking-tight text-white whitespace-nowrap">

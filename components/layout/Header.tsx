@@ -23,9 +23,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
 
         {/* Логотип для мобилки */}
         <div className="flex items-center gap-2 md:hidden">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand">
-            <Zap className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
-          </div>
+          <img src="/logo.jpg" alt="KAZ Power" className="h-7 w-7 rounded-lg object-cover" />
           <span className="text-sm font-bold text-foreground">
             KAZ <span className="text-brand">Power</span>
           </span>

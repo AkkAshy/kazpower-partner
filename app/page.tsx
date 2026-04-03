@@ -46,9 +46,7 @@ export default function LoginPage() {
       <div className="relative w-full max-w-[400px]">
         {/* Логотип */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand shadow-lg shadow-brand/30">
-            <Zap className="h-7 w-7 text-white" strokeWidth={2.5} />
-          </div>
+          <img src="/logo.jpg" alt="KAZ Power" className="h-14 w-14 rounded-2xl shadow-lg shadow-brand/30 object-cover" />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white">
               KAZ <span className="text-brand">Power</span>
